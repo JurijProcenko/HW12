@@ -78,7 +78,11 @@ class Birthday(Field):
             self.__birthday = bday
 
     def __str__(self):
-        return f"{self.birthday}"
+        if self.birthday != None:
+            bday = self.birthday.strftime("%Y-%m-%d")
+        else:
+            bday = "No Birthday "
+        return f"{bday:<12}"
 
 
 class Record:
@@ -136,7 +140,7 @@ class Record:
             return delta
 
     def __str__(self):
-        return f"Contact name: {self.name}, birthday: {self.birthday}, phones: {'; '.join(p.value for p in self.phones)}"
+        return f"Contact name: {self.name.value:<20}, birthday: {self.birthday}, phones: {'; '.join(p.value for p in self.phones)}"
 
 
 class AddressBook(UserDict):
@@ -317,7 +321,7 @@ def show(args=None, *_):
     else:
         for items in book.iterator(int(args)):
             print(items)
-            empty = input("Press enter for next part")
+            _ = input("Press enter for next part")
 
 
 @input_error
