@@ -4,10 +4,11 @@ you can use command below:
 add <name> <phone number> [birthday] - add new record to the phonebook
 change <name> <phone number>         - change record into phonebook
 phone <name> <phone number>          - show phone number for name
+find <part_of_name>|<part_of_phone>  - search for part of name or phone in phonebook
 delete <name>                        - delete user <name> from phonebook
 birthday <name> [birthday]           - show how many days to birthday for <name> and can set birthday
 show all                             - show all records from phonebook
-show(N)                              - show records fo N record in one time
+show N                               - show records fo N record in one time
 hello                                - it is just hello :)
 exit | close | good bye              - finish the program
 help                                 - this information
@@ -161,6 +162,21 @@ class AddressBook(UserDict):
             if record == name:
                 return self.data[record]
 
+    def find_name(self, part_of_name: str):
+        result = ""
+        for record in self.data:
+            if part_of_name in record:
+                result += f"{self.data[record]}\n"
+        return result
+
+    def find_phone(self, part_of_phone: str):
+        result = ""
+        for record in self.data:
+            for phone in self.data[record].phones:
+                if part_of_phone in phone.value:
+                    result += f"{record} has {phone}\n"
+        return result
+
     def add_record(self, new_record: Record) -> str:
         self.data[new_record.name.value] = new_record
         return f"Contact {new_record.name.value} add succefully!"
@@ -295,7 +311,7 @@ def birthday(*args) -> str:
 
 
 @input_error
-def show(args=None):
+def show(args=None, *_):
     if not args:
         return show_all()
     else:
@@ -322,6 +338,14 @@ def hello(*_) -> str:
     return "Hi! How can I help you?"
 
 
+@input_error
+def find(*args):
+    if args[0].isalpha():
+        return book.find_name(args[0])
+    if args[0].isdigit():
+        return book.find_phone(args[0])
+
+
 COMMANDS = {
     "add": add_number,
     "change": change_number,
@@ -331,6 +355,7 @@ COMMANDS = {
     "hello": hello,
     "help": help,
     "show": show,
+    "find": find,
     "birthday": birthday,
 }
 
@@ -366,7 +391,7 @@ def main():
         if ret_code == "Good bye!":
             print("Good bye, and have a nice day!")
             break
-        else:
+        elif ret_code:
             print(ret_code)
 
 
