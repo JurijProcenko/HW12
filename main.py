@@ -188,6 +188,34 @@ class AddressBook(UserDict):
     def __getitem__(self, key: str) -> Record:
         return self.data[key]
 
+    def finish(self):
+        with open(data_pb, "w") as pb:
+            for record in self.data.values():
+                phones = " ".join([rec.value for rec in record.phones])
+                if not record.birthday.birthday:
+                    birthday = ""
+                else:
+                    birthday = record.birthday.birthday.strftime("%Y-%m-%d")
+                pb.write(f"{record.name.value} {phones} {birthday}\n")
+
+    def start(self):
+        data_pb = Path("phonebook.txt")
+        if data_pb.exists():
+            with open(data_pb, "r") as pb:
+                records = pb.readlines()
+                for record in records:
+                    record = record.replace("\n", "").split()
+                    name, idx = find_name(*record)
+                    record = record[idx:]
+                    birthday = None
+                    phone = record.pop(0)
+                    if record and "-" in record[-1]:
+                        birthday = record.pop(-1)
+                    self.add_record(Record(name, phone, Birthday(birthday)))
+                    if record:
+                        for rec in record:
+                            self.data[name].add_phone(rec)
+
 
 book = AddressBook()
 
@@ -200,26 +228,12 @@ def find_name(*args) -> str:
             name += f"{item} "
             idx += 1
         else:
+            name = name.strip()
             break
     return name, idx
 
 
 data_pb = Path("phonebook.txt")
-if data_pb.exists():
-    with open(data_pb, "r") as pb:
-        records = pb.readlines()
-        for record in records:
-            record = record.replace("\n", "").split()
-            name, idx = find_name(*record)
-            record = record[idx:]
-            birthday = None
-            phone = record.pop(0)
-            if record and "-" in record[-1]:
-                birthday = record.pop(-1)
-            book.add_record(Record(name, phone, Birthday(birthday)))
-            if record:
-                for rec in record:
-                    book[name].add_phone(rec)
 
 
 def input_error(func):
@@ -369,14 +383,7 @@ def parser(command: str) -> str:
         return show_all()
 
     if command.lower().startswith(("good bye", "close", "exit")):
-        with open(data_pb, "w") as pb:
-            for record in book.values():
-                phones = " ".join([rec.value for rec in record.phones])
-                if not record.birthday.birthday:
-                    birthday = ""
-                else:
-                    birthday = record.birthday.birthday.strftime("%Y-%m-%d")
-                pb.write(f"{record.name.value} {phones} {birthday}\n")
+        book.finish()
         return "Good bye!"
 
     command = command.split()
@@ -388,9 +395,12 @@ def parser(command: str) -> str:
 
 
 def main():
+    book.start()
     print(help())
     while True:
         command = input("Enter your command > ")
+        if not command:
+            continue
         ret_code = parser(command)
         if ret_code == "Good bye!":
             print("Good bye, and have a nice day!")
