@@ -14,6 +14,7 @@ exit | close | good bye              - finish the program
 help                                 - this information
 """
 
+import pickle
 from pathlib import Path
 from collections import UserDict
 from datetime import date, datetime, timedelta
@@ -189,33 +190,40 @@ class AddressBook(UserDict):
         return self.data[key]
 
     def finish(self):
-        with open(data_pb, "w") as pb:
-            for record in self.data.values():
-                phones = " ".join([rec.value for rec in record.phones])
-                if not record.birthday.birthday:
-                    birthday = ""
-                else:
-                    birthday = record.birthday.birthday.strftime("%Y-%m-%d")
-                pb.write(f"{record.name.value} {phones} {birthday}\n")
+        # if data_pb.exists():
+        #     with open(data_pb, "w") as pb:
+        #         for record in self.data.values():
+        #             phones = " ".join([rec.value for rec in record.phones])
+        #             if not record.birthday.birthday:
+        #                 birthday = ""
+        #             else:
+        #                 birthday = record.birthday.birthday.strftime("%Y-%m-%d")
+        #             pb.write(f"{record.name.value} {phones} {birthday}\n")
+        # else:
+        with open(Path("phonebook1.txt"), "wb") as pb:
+            data = pickle.dumps(self.data)
+            pb.write(data)
 
     def start(self):
-        data_pb = Path("phonebook.txt")
-        if data_pb.exists():
-            with open(data_pb, "r") as pb:
-                records = pb.readlines()
-                for record in records:
-                    record = record.replace("\n", "").split()
-                    name, idx = find_name(*record)
-                    record = record[idx:]
-                    birthday = None
-                    phone = record.pop(0)
-                    if record and "-" in record[-1]:
-                        birthday = record.pop(-1)
-                    self.add_record(Record(name, phone, Birthday(birthday)))
-                    if record:
-                        for rec in record:
-                            self.data[name].add_phone(rec)
-
+        # if data_pb.exists():
+            # with open(data_pb, "r") as pb:
+            #     records = pb.readlines()
+            #     for record in records:
+            #         record = record.replace("\n", "").split()
+            #         name, idx = find_name(*record)
+            #         record = record[idx:]
+            #         birthday = None
+            #         phone = record.pop(0)
+            #         if record and "-" in record[-1]:
+            #             birthday = record.pop(-1)
+            #         self.add_record(Record(name, phone, Birthday(birthday)))
+            #         if record:
+            #             for rec in record:
+            #                 self.data[name].add_phone(rec)
+        with open(Path("phonebook1.txt"), "rb") as pb:
+            data = pb.read()
+            self.data = pickle.loads(data)
+            
 
 book = AddressBook()
 
@@ -230,10 +238,14 @@ def find_name(*args) -> str:
         else:
             name = name.strip()
             break
-    return name, idx
+    return name.strip(), idx
 
 
 data_pb = Path("phonebook.txt")
+# if Path("phonebook.json").exists():
+#     data_pb = Path("phonebook.json")
+# elif Path("phonebook.txt").exists():
+#     data_pb = Path("phonebook.txt")
 
 
 def input_error(func):
